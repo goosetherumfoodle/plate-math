@@ -95,7 +95,13 @@ update msg model =
             ( addPlates weight model, Cmd.none )
 
         Reset ->
-            ( { model | total = barWeight, outcome = Nothing, svgPlates = [] }, newTarget )
+            ( { model
+                | total = barWeight
+                , outcome = Nothing
+                , svgPlates = []
+              }
+            , newTarget
+            )
 
         Target newTarget ->
             ( { model | target = newTarget }, Cmd.none )
@@ -118,7 +124,12 @@ roomForMorePlates _ =
 
 addPlates : PlateWeight -> Model -> Model
 addPlates weight model =
-    addSvgPlates weight (addToTotal weight model)
+    case model.outcome of
+        Nothing ->
+            addSvgPlates weight (addToTotal weight model)
+
+        Just _ ->
+            model
 
 
 
@@ -214,9 +225,9 @@ view model =
         [ h1 [] [ text "Plate Math" ]
         , barbellSvg model.svgPlates
         , div []
-            [ div [] [ text <| "Target: " ++ toString model.target ]
+            [ div [] [ text <| "Target: " ++ toString model.target ++ " lbs"]
             , outcomeDiv model.outcome model.total
-            , button [ onClick Test ] [ text "Calculate" ]
+            , button [ onClick Test ] [ text "Check" ]
             , button [ onClick Reset ] [ text "Reset" ]
             ]
         , plateRackDiv allPlates
@@ -227,7 +238,7 @@ outcomeDiv : Maybe Bool -> Int -> Html Msg
 outcomeDiv outcome total =
     let
         displayTotal =
-            text <| "Calculated: " ++ toString total
+            text <| "Total: " ++ toString total
     in
         case outcome of
             Nothing ->
@@ -253,7 +264,7 @@ rackedPlateDiv weight =
         [ style [ ( "border-style", "solid" ) ]
         , onClick <| AddPlates weight
         ]
-        [ text <| toString weight ]
+        [ text << toString <| toNumber weight ]
 
 
 
@@ -360,7 +371,7 @@ buildLeftPlate : Maybe PlateSvgAttrs -> PlateWeight -> PlateSvgAttrs
 buildLeftPlate prevPlate weight =
     case prevPlate of
         Nothing ->
-            { x = 60
+            { x = 70 - calcWidth weight
             , y = calcY weight
             , height = calcHeight weight
             , width = calcWidth weight
@@ -470,4 +481,9 @@ calcWidth weight =
 
 emptyBar : List (Svg Msg)
 emptyBar =
-    [ rect [ x "0", y "58", width "400", height "5", rx "1", ry "2" ] [] ]
+    [ rect [ x "0", y "58", width "400", height "5", rx "1", ry "2" ] []
+    , rect [ x "330", y "52", width "10", height "18", rx "1", ry "2" ] []
+    , rect [ x "70", y "52", width "10", height "18", rx "1", ry "2" ] []
+    , rect [ x "329", y "56", width "70", height "9", rx "1", ry "2" ] []
+    , rect [ x "0", y "56", width "71", height "9", rx "1", ry "2" ] []
+    ]
