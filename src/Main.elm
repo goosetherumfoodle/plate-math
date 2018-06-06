@@ -23,7 +23,7 @@ type alias Model =
 type alias PlatePair =
     { leftPlate : PlateSvgAttrs
     , rightPlate : PlateSvgAttrs
-    , weight : Float
+    , weight : PlateWeight
     }
 
 
@@ -44,9 +44,9 @@ init =
     ( { total = barWeight, target = 0, outcome = Nothing, svgPlates = [] }, newTarget )
 
 
+
 -- blankPlatePair =
 --     { leftPlate = blankPlate, rightPlate = blankPlate, weight = 0 }
-
 -- blankPlate : PlateSvgAttrs
 -- blankPlate =
 --     { x = 0, y = 0, width = 0, height = 0 }
@@ -57,12 +57,24 @@ barWeight =
     45
 
 
+type PlateWeight
+    = FourtyFive
+    | ThirtyFive
+    | TwentyFive
+    | Ten
+    | Five
+    | TwoPointFive
 
--- TODO: make plates a sumtype!!
 
-plates : List Float
-plates =
-    [ 45, 35, 25, 10, 5, 2.5 ]
+allPlates : List PlateWeight
+allPlates =
+    [ FourtyFive
+    , ThirtyFive
+    , TwentyFive
+    , Ten
+    , Five
+    , TwoPointFive
+    ]
 
 
 
@@ -70,7 +82,7 @@ plates =
 
 
 type Msg
-    = AddPlates Float
+    = AddPlates PlateWeight
     | Reset
     | Target Int
     | Test
@@ -94,13 +106,17 @@ update msg model =
             else
                 ( { model | outcome = Just False }, Cmd.none )
 
+
+
 -- todo
+
+
 roomForMorePlates : a -> Bool
 roomForMorePlates _ =
     True
 
 
-addPlates : Float -> Model -> Model
+addPlates : PlateWeight -> Model -> Model
 addPlates weight model =
     addSvgPlates weight (addToTotal weight model)
 
@@ -109,7 +125,7 @@ addPlates weight model =
 -- todo: maybe total can be just added up from plates
 
 
-addSvgPlates : Float -> Model -> Model
+addSvgPlates : PlateWeight -> Model -> Model
 addSvgPlates weight model =
     if roomForMorePlates model.svgPlates then
         let
@@ -156,14 +172,36 @@ consPlates =
 --             blankPlateSvg
 
 
-addToTotal : Float -> Model -> Model
+addToTotal : PlateWeight -> Model -> Model
 addToTotal weight model =
     case model.outcome of
         Nothing ->
-            { model | total = model.total + (round <| weight * 2) }
+            { model | total = model.total + (round <| (toNumber weight) * 2) }
 
         Just _ ->
             model
+
+
+toNumber : PlateWeight -> Float
+toNumber weight =
+    case weight of
+        FourtyFive ->
+            45
+
+        ThirtyFive ->
+            35
+
+        TwentyFive ->
+            25
+
+        Ten ->
+            10
+
+        Five ->
+            5
+
+        TwoPointFive ->
+            2.5
 
 
 
@@ -181,7 +219,7 @@ view model =
             , button [ onClick Test ] [ text "Calculate" ]
             , button [ onClick Reset ] [ text "Reset" ]
             ]
-        , plateRackDiv plates
+        , plateRackDiv allPlates
         ]
 
 
@@ -204,12 +242,12 @@ outcomeDiv outcome total =
                     [ displayTotal ]
 
 
-plateRackDiv : List Float -> Html Msg
+plateRackDiv : List PlateWeight -> Html Msg
 plateRackDiv weights =
     div [] <| List.map rackedPlateDiv weights
 
 
-rackedPlateDiv : Float -> Html Msg
+rackedPlateDiv : PlateWeight -> Html Msg
 rackedPlateDiv weight =
     div
         [ style [ ( "border-style", "solid" ) ]
@@ -234,6 +272,7 @@ main =
 
 
 ---- Domain ------
+
 
 maxTarget : Int
 maxTarget =
@@ -282,8 +321,8 @@ plateRect attrs =
         , y <| toString attrs.y
         , width <| toString attrs.width
         , height <| toString attrs.height
-        , rx "1"
-        , ry "2"
+        , rx "2"
+        , ry "3"
         ]
         []
 
@@ -292,7 +331,7 @@ plateRect attrs =
 -- todo: do we really need 'weight' in the record?! isn't it represented in the svg attrs?
 
 
-buildPlatePair : Maybe PlatePair -> Float -> PlatePair
+buildPlatePair : Maybe PlatePair -> PlateWeight -> PlatePair
 buildPlatePair prevPlates weight =
     case prevPlates of
         Nothing ->
@@ -300,7 +339,8 @@ buildPlatePair prevPlates weight =
             , rightPlate = buildRightPlate Nothing weight
             , weight = weight
             }
-        Just pair  ->
+
+        Just pair ->
             { leftPlate = buildLeftPlate (Just pair.leftPlate) weight
             , rightPlate = buildRightPlate (Just pair.rightPlate) weight
             , weight = weight
@@ -308,15 +348,15 @@ buildPlatePair prevPlates weight =
 
 
 plateBuffer : Float
-plateBuffer = 1
-
+plateBuffer =
+    0
 
 
 
 -- todo plate svg attrs is misnamed due to presence of "weight"
 
 
-buildLeftPlate : Maybe PlateSvgAttrs -> Float -> PlateSvgAttrs
+buildLeftPlate : Maybe PlateSvgAttrs -> PlateWeight -> PlateSvgAttrs
 buildLeftPlate prevPlate weight =
     case prevPlate of
         Nothing ->
@@ -327,14 +367,14 @@ buildLeftPlate prevPlate weight =
             }
 
         Just plate ->
-            { x = plate.x - plateBuffer - 10
+            { x = plate.x - plateBuffer - calcWidth weight
             , y = calcY weight
             , height = calcHeight weight
             , width = calcWidth weight
             }
 
 
-buildRightPlate : Maybe PlateSvgAttrs -> Float -> PlateSvgAttrs
+buildRightPlate : Maybe PlateSvgAttrs -> PlateWeight -> PlateSvgAttrs
 buildRightPlate prevPlate weight =
     case prevPlate of
         Nothing ->
@@ -351,26 +391,76 @@ buildRightPlate prevPlate weight =
             , width = calcWidth weight
             }
 
-calcHeight : Float -> Float
-calcHeight weight = if weight == 45 then
-                        120
-                    else 100
 
-calcWidth : Float -> Float
-calcWidth weight = if weight == 45 then
-                        10
-                    else 10
+calcHeight : PlateWeight -> Float
+calcHeight weight =
+    case weight of
+        FourtyFive ->
+            120
 
-calcY : Float -> Float
-calcY weight = if weight == 45 then
-                   0
-               else 10
+        ThirtyFive ->
+            100
+
+        TwentyFive ->
+            70
+
+        Ten ->
+            50
+
+        Five ->
+            30
+
+        TwoPointFive ->
+            28
+
+
+calcY : PlateWeight -> Float
+calcY weight =
+    case weight of
+        FourtyFive ->
+            0
+
+        ThirtyFive ->
+            10
+
+        TwentyFive ->
+            25
+
+        Ten ->
+            35
+
+        Five ->
+            45
+
+        TwoPointFive ->
+            46
+
+
+calcWidth : PlateWeight -> Float
+calcWidth weight =
+    case weight of
+        FourtyFive ->
+            10
+
+        ThirtyFive ->
+            10
+
+        TwentyFive ->
+            9
+
+        Ten ->
+            6
+
+        Five ->
+            5
+
+        TwoPointFive ->
+            2
+
+
 
 -- blankPlateSvg =
 --     rect [] []
-
-
-
 -- [ rect [ x "60", y "0", width "10", height "120", rx "1", ry "2" ] []
 --               , rect [ x "340", y "0", width "10", height "120", rx "1", ry "2" ] []
 --               , rect [ x "49", y "10", width "10", height "100", rx "1", ry "2" ] []
@@ -379,4 +469,5 @@ calcY weight = if weight == 45 then
 
 
 emptyBar : List (Svg Msg)
-emptyBar = [ rect [ x "0", y "60", width "400", height "5", rx "1", ry "2" ] [] ]
+emptyBar =
+    [ rect [ x "0", y "58", width "400", height "5", rx "1", ry "2" ] [] ]
