@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, img, button)
+import Html exposing (Html, text, div, h1, h3, img, button, hr)
 import Html.Attributes exposing (src, style, value)
 import Html.Events exposing (onClick)
 import Random exposing (Generator, generate, int)
@@ -35,21 +35,9 @@ type alias PlateSvgAttrs =
     }
 
 
-
--- rect [ x "340", y "0", width "10", height "120", rx "1", ry "2" ]
-
-
 init : ( Model, Cmd Msg )
 init =
     ( { total = barWeight, target = 0, outcome = Nothing, svgPlates = [] }, newTarget )
-
-
-
--- blankPlatePair =
---     { leftPlate = blankPlate, rightPlate = blankPlate, weight = 0 }
--- blankPlate : PlateSvgAttrs
--- blankPlate =
---     { x = 0, y = 0, width = 0, height = 0 }
 
 
 barWeight : Int
@@ -113,13 +101,12 @@ update msg model =
                 ( { model | outcome = Just False }, Cmd.none )
 
 
-
--- todo
-
-
-roomForMorePlates : a -> Bool
-roomForMorePlates _ =
-    True
+roomForMorePlates : List PlatePair -> Bool
+roomForMorePlates pairs =
+    if List.length pairs <= 5 then
+        True
+    else
+        False
 
 
 addPlates : PlateWeight -> Model -> Model
@@ -153,34 +140,9 @@ carPlates =
     head
 
 
-
--- case head plates of
---     Just pair ->
---         pair
---     Nothing ->
---         blankPlatePair
-
-
 consPlates : PlatePair -> List PlatePair -> List PlatePair
 consPlates =
     (::)
-
-
-
--- rightPlate : List (Svg Msg) -> Svg Msg
--- rightPlate plates =
---     case head plates of
---         Just plate ->
---             plate
---         Nothing ->
---             blankPlateSvg
--- leftPlate : List (Svg Msg) -> Svg Msg
--- leftPlate plates =
---     case Maybe.andThen head (tail plates) of
---         Just plate ->
---             plate
---         Nothing ->
---             blankPlateSvg
 
 
 addToTotal : PlateWeight -> Model -> Model
@@ -225,7 +187,7 @@ view model =
         [ h1 [] [ text "Plate Math" ]
         , barbellSvg model.svgPlates
         , div []
-            [ div [] [ text <| "Target: " ++ toString model.target ++ " lbs"]
+            [ div [] [ text <| "Target: " ++ toString model.target ++ " lbs" ]
             , outcomeDiv model.outcome model.total
             , button [ onClick Test ] [ text "Check" ]
             , button [ onClick Reset ] [ text "Reset" ]
@@ -255,13 +217,17 @@ outcomeDiv outcome total =
 
 plateRackDiv : List PlateWeight -> Html Msg
 plateRackDiv weights =
-    div [] <| List.map rackedPlateDiv weights
+    div []
+        [ hr [] []
+        , h3 [] [text "Click to add plates to bar"]
+        , div [] <| List.map rackedPlateDiv weights
+        ]
 
 
 rackedPlateDiv : PlateWeight -> Html Msg
 rackedPlateDiv weight =
-    div
-        [ style [ ( "border-style", "solid" ) ]
+    button
+        [ style [ ]
         , onClick <| AddPlates weight
         ]
         [ text << toString <| toNumber weight ]
