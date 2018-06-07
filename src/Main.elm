@@ -219,7 +219,7 @@ plateRackDiv : List PlateWeight -> Html Msg
 plateRackDiv weights =
     div []
         [ hr [] []
-        , h3 [] [text "Click to add plates to bar"]
+        , h3 [] [ text "Click to add plates to bar" ]
         , div [] <| List.map rackedPlateDiv weights
         ]
 
@@ -227,7 +227,7 @@ plateRackDiv weights =
 rackedPlateDiv : PlateWeight -> Html Msg
 rackedPlateDiv weight =
     button
-        [ style [ ]
+        [ style []
         , onClick <| AddPlates weight
         ]
         [ text << toString <| toNumber weight ]
@@ -273,15 +273,13 @@ divisibleBy x y =
 
 
 ---- SVG WEIGHTS ------
--- lastPlates : List (Svg Msg) -> Maybe (List (Svg Msg))
--- lastPlates = tail Maybe.andThen tail
-
 
 barbellSvg : List PlatePair -> Html Msg
 barbellSvg plates =
     svg
         [ width "400"
-        , height "120" -- , viewBox "0 0 200 200"
+        , height "120"
+        , viewBox "0 0 400 120"
         ]
     <|
         concat
