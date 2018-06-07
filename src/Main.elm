@@ -274,19 +274,20 @@ divisibleBy x y =
 
 ---- SVG WEIGHTS ------
 
+
 barbellSvg : List PlatePair -> Html Msg
 barbellSvg plates =
-    svg
-        [ width "400"
-        , height "120"
-        , viewBox "0 0 400 120"
-        ]
-    <|
-        concat
-            [ emptyBar
-            , List.map (plateRect << .leftPlate) plates
-            , List.map (plateRect << .rightPlate) plates
+    div []
+        [ svg
+            [ viewBox "0 0 400 120"
             ]
+          <|
+            concat
+                [ emptyBar
+                , List.map (plateRect << .leftPlate) plates
+                , List.map (plateRect << .rightPlate) plates
+                ]
+        ]
 
 
 plateRect : PlateSvgAttrs -> Svg Msg
@@ -431,16 +432,6 @@ calcWidth weight =
 
         TwoPointFive ->
             2
-
-
-
--- blankPlateSvg =
---     rect [] []
--- [ rect [ x "60", y "0", width "10", height "120", rx "1", ry "2" ] []
---               , rect [ x "340", y "0", width "10", height "120", rx "1", ry "2" ] []
---               , rect [ x "49", y "10", width "10", height "100", rx "1", ry "2" ] []
---               , rect [ x "351", y "10", width "10", height "100", rx "1", ry "2" ] []
---               ]
 
 
 emptyBar : List (Svg Msg)
