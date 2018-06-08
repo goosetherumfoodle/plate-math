@@ -6,7 +6,7 @@ import Html.Events exposing (onClick)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
 import Svg.Attributes exposing (width, height, viewBox, rx, ry, x, y)
-import List exposing (concat, head, tail)
+import List exposing (concat, head, tail, sum, map)
 import Bootstrap.CDN as CDN
 
 
@@ -14,10 +14,10 @@ import Bootstrap.CDN as CDN
 
 
 type alias Model =
-    { total : Int
-    , target : Int
+    { target : Int
     , outcome : Maybe Bool
-    , svgPlates : List PlatePair
+    , plates : List PlatePair
+    , total : Int
     }
 
 
@@ -38,7 +38,7 @@ type alias PlateSvgAttrs =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { total = barWeight, target = 0, outcome = Nothing, svgPlates = [] }, newTarget )
+    ( { total = barWeight, target = 0, outcome = Nothing, plates = [] }, newTarget )
 
 
 barWeight : Int
@@ -87,7 +87,7 @@ update msg model =
             ( { model
                 | total = barWeight
                 , outcome = Nothing
-                , svgPlates = []
+                , plates = []
               }
             , newTarget
             )
@@ -114,24 +114,20 @@ addPlates : PlateWeight -> Model -> Model
 addPlates weight model =
     case model.outcome of
         Nothing ->
-            addSvgPlates weight (addToTotal weight model)
+            sumTotal <| addSvgPlates weight model
 
         Just _ ->
             model
 
 
-
--- todo: maybe total can be just added up from plates
-
-
 addSvgPlates : PlateWeight -> Model -> Model
 addSvgPlates weight model =
-    if roomForMorePlates model.svgPlates then
+    if roomForMorePlates model.plates then
         let
             newPlates =
-                buildPlatePair (carPlates model.svgPlates) weight
+                buildPlatePair (carPlates model.plates) weight
         in
-            { model | svgPlates = consPlates newPlates model.svgPlates }
+            { model | plates = consPlates newPlates model.plates }
     else
         model
 
@@ -146,14 +142,9 @@ consPlates =
     (::)
 
 
-addToTotal : PlateWeight -> Model -> Model
-addToTotal weight model =
-    case model.outcome of
-        Nothing ->
-            { model | total = model.total + (round <| (toNumber weight) * 2) }
-
-        Just _ ->
-            model
+sumTotal : Model -> Model
+sumTotal model =
+    { model | total = sum <| (::) barWeight <| map (round << (*) 2 << toNumber << .weight) model.plates }
 
 
 toNumber : PlateWeight -> Float
@@ -187,14 +178,16 @@ view model =
     div [ class "container text-center" ]
         [ CDN.stylesheet
         , h1 [] [ text "Plate Math" ]
-        , barbellSvg model.svgPlates
+        , barbellSvg model.plates
         , div [ class "row" ]
-            [ div [class "col"]
+            [ div [ class "col" ]
                 [ text <| "Target: " ++ toString model.target ++ " lbs"
                 , outcomeDiv model.outcome model.total
                 ]
-            , div [class "col"] [button [ onClick Test, class "btn btn-primary" ] [ text "Check" ]
-            , button [ onClick Reset, class "btn btn-warning" ] [ text "Reset" ]]
+            , div [ class "col" ]
+                [ button [ onClick Test, class "btn btn-primary" ] [ text "Check" ]
+                , button [ onClick Reset, class "btn btn-warning" ] [ text "Reset" ]
+                ]
             ]
         , plateRackDiv allPlates
         ]
@@ -307,10 +300,6 @@ plateRect attrs =
         []
 
 
-
--- todo: do we really need 'weight' in the record?! isn't it represented in the svg attrs?
-
-
 buildPlatePair : Maybe PlatePair -> PlateWeight -> PlatePair
 buildPlatePair prevPlates weight =
     case prevPlates of
@@ -330,10 +319,6 @@ buildPlatePair prevPlates weight =
 plateBuffer : Float
 plateBuffer =
     0
-
-
-
--- todo plate svg attrs is misnamed due to presence of "weight"
 
 
 buildLeftPlate : Maybe PlateSvgAttrs -> PlateWeight -> PlateSvgAttrs
