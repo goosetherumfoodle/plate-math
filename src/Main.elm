@@ -297,7 +297,7 @@ plateRackDiv : Maybe a -> List PlateWeight -> Html Msg
 plateRackDiv outcome weights =
     div []
         [ hr [] []
-        , h3 [] [ text "Click to add plates to bar" ]
+        , h3 [] [ text "Add Plates" ]
         , div
             [ class "btn-group-lg"
             , style [ ( "role", "group" ) ]
