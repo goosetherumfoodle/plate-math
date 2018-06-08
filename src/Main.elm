@@ -1,12 +1,12 @@
 module Main exposing (..)
 
 import Html exposing (Html, text, div, h1, h3, img, button, hr)
-import Html.Attributes exposing (src, style, value, class)
+import Html.Attributes exposing (src, style, value, class, disabled)
 import Html.Events exposing (onClick)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
 import Svg.Attributes exposing (width, height, viewBox, rx, ry, x, y)
-import List exposing (concat, head, tail, sum, map)
+import List exposing (concat, head, tail, sum, map, drop)
 import Bootstrap.CDN as CDN
 
 
@@ -15,9 +15,9 @@ import Bootstrap.CDN as CDN
 
 type alias Model =
     { target : Int
+    , total : Int
     , outcome : Maybe Bool
     , plates : List PlatePair
-    , total : Int
     }
 
 
@@ -75,6 +75,7 @@ type Msg
     | Reset
     | Target Int
     | Test
+    | Undo
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -85,7 +86,7 @@ update msg model =
 
         Reset ->
             ( { model
-                | total = barWeight
+                | total = 0
                 , outcome = Nothing
                 , plates = []
               }
@@ -96,10 +97,22 @@ update msg model =
             ( { model | target = newTarget }, Cmd.none )
 
         Test ->
-            if model.total == model.target then
-                ( { model | outcome = Just True }, Cmd.none )
-            else
-                ( { model | outcome = Just False }, Cmd.none )
+            let
+                newModel =
+                    sumTotal model
+            in
+                if newModel.total == newModel.target then
+                    ( { newModel | outcome = Just True }, Cmd.none )
+                else
+                    ( { newModel | outcome = Just False }, Cmd.none )
+
+        Undo ->
+            case model.outcome of
+                Nothing ->
+                    ( { model | plates = drop 1 model.plates }, Cmd.none )
+
+                Just _ ->
+                    ( model, Cmd.none )
 
 
 roomForMorePlates : List PlatePair -> Bool
@@ -114,7 +127,7 @@ addPlates : PlateWeight -> Model -> Model
 addPlates weight model =
     case model.outcome of
         Nothing ->
-            sumTotal <| addSvgPlates weight model
+            addSvgPlates weight model
 
         Just _ ->
             model
@@ -144,7 +157,14 @@ consPlates =
 
 sumTotal : Model -> Model
 sumTotal model =
-    { model | total = sum <| (::) barWeight <| map (round << (*) 2 << toNumber << .weight) model.plates }
+    { model
+        | total =
+            sum <|
+                (::) barWeight <|
+                    map
+                        (round << (*) 2 << toNumber << .weight)
+                        model.plates
+    }
 
 
 toNumber : PlateWeight -> Float
@@ -185,12 +205,34 @@ view model =
                 , outcomeDiv model.outcome model.total
                 ]
             , div [ class "col" ]
-                [ button [ onClick Test, class "btn btn-primary" ] [ text "Check" ]
-                , button [ onClick Reset, class "btn btn-warning" ] [ text "Reset" ]
+                [ disableableButton model.outcome
+                    [ onClick Test
+                    , class "btn btn-primary"
+                    ]
+                    (text "Check")
+                , disableableButton model.outcome
+                    [ onClick Undo
+                    , class "btn btn-warning"
+                    ]
+                    (text "Undo")
+                , button
+                    [ onClick Reset
+                    , class "btn btn-danger"
+                    ]
+                    [ text "Reset" ]
                 ]
             ]
-        , plateRackDiv allPlates
+        , plateRackDiv model.outcome allPlates
         ]
+
+
+disableableButton outcome style txt =
+    case outcome of
+        Nothing ->
+            button style [ txt ]
+
+        Just _ ->
+            button (disabled True :: style) [ txt ]
 
 
 outcomeDiv : Maybe Bool -> Int -> Html Msg
@@ -212,22 +254,27 @@ outcomeDiv outcome total =
                     [ displayTotal ]
 
 
-plateRackDiv : List PlateWeight -> Html Msg
-plateRackDiv weights =
+plateRackDiv : Maybe a -> List PlateWeight -> Html Msg
+plateRackDiv outcome weights =
     div []
         [ hr [] []
         , h3 [] [ text "Click to add plates to bar" ]
-        , div [ class "btn-group-lg", style [ ( "role", "group" ) ] ] <| List.map rackedPlateDiv weights
+        , div
+            [ class "btn-group-lg"
+            , style [ ( "role", "group" ) ]
+            ]
+          <|
+            List.map (rackedPlateDiv outcome) weights
         ]
 
 
-rackedPlateDiv : PlateWeight -> Html Msg
-rackedPlateDiv weight =
-    button
+rackedPlateDiv : Maybe a -> PlateWeight -> Html Msg
+rackedPlateDiv outcome weight =
+    disableableButton outcome
         [ class "btn btn-secondary"
         , onClick <| AddPlates weight
         ]
-        [ text << toString <| toNumber weight ]
+        (text << toString <| toNumber weight)
 
 
 
