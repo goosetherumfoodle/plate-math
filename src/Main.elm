@@ -1,15 +1,17 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, h3, img, button, hr)
-import Html.Attributes exposing (src, style, value, class, disabled)
+import Html exposing (Html, text, div, h1, h3, button, hr, select, option, label)
+import Html.Attributes exposing (src, style, class, disabled, defaultValue, value, name, selected)
 import Html.Events exposing (onClick)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
 import Svg.Attributes exposing (width, height, viewBox, rx, ry, x, y)
-import List exposing (concat, head, tail, sum, map, drop)
+import List exposing (concat, head, tail, sum, map, drop, range)
 import Bootstrap.CDN as CDN
 
 
+-- todo: make weight the combined of the pairs? in plate list
+-- todo: re-organize
 ---- MODEL ----
 
 
@@ -18,6 +20,7 @@ type alias Model =
     , total : Int
     , outcome : Maybe Bool
     , plates : List PlatePair
+    , maxTarget : Int
     }
 
 
@@ -38,7 +41,14 @@ type alias PlateSvgAttrs =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { total = barWeight, target = 0, outcome = Nothing, plates = [] }, newTarget )
+    ( { total = barWeight
+      , target = 0
+      , outcome = Nothing
+      , plates = []
+      , maxTarget = weightWithTwo45s maxPlatePairs
+      }
+    , newTarget <| weightWithTwo45s maxPlatePairs
+    )
 
 
 barWeight : Int
@@ -76,6 +86,7 @@ type Msg
     | Target Int
     | Test
     | Undo
+    | MaxTarget Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,7 +101,7 @@ update msg model =
                 , outcome = Nothing
                 , plates = []
               }
-            , newTarget
+            , newTarget model.maxTarget
             )
 
         Target newTarget ->
@@ -114,10 +125,17 @@ update msg model =
                 Just _ ->
                     ( model, Cmd.none )
 
+        MaxTarget newTarget ->
+            ( { model | maxTarget = newTarget }, Cmd.none )
+
+
+maxPlatePairs =
+    6
+
 
 roomForMorePlates : List PlatePair -> Bool
 roomForMorePlates pairs =
-    if List.length pairs <= 5 then
+    if List.length pairs < maxPlatePairs then
         True
     else
         False
@@ -193,11 +211,31 @@ toNumber weight =
 ---- VIEW ----
 
 
+maxTargets =
+    map weightWithTwo45s (range 1 maxPlatePairs)
+
+
+weightWithTwo45s numPlates =
+    numPlates * round (toNumber FourtyFive * 2) + barWeight
+
+
+maxTargetSelect current =
+    select [ defaultValue "max" ] <| placeholderOption :: map maxTargetOption maxTargets
+
+
+placeholderOption =
+    option [ disabled True, selected True ] [ text "Up To" ]
+
+
+maxTargetOption max =
+    option [ onClick (MaxTarget max) ] [ text <| toString max ]
+
+
 view : Model -> Html Msg
 view model =
     div [ class "container text-center" ]
         [ CDN.stylesheet
-        , h1 [] [ text "Plate Math" ]
+        , h1 [] [ text "Plate Math Quiz" ]
         , barbellSvg model.plates
         , div [ class "row" ]
             [ div [ class "col" ]
@@ -220,6 +258,7 @@ view model =
                     , class "btn btn-danger"
                     ]
                     [ text "Reset" ]
+                , maxTargetSelect model.maxTarget
                 ]
             ]
         , plateRackDiv model.outcome allPlates
@@ -295,24 +334,19 @@ main =
 ---- Domain ------
 
 
-maxTarget : Int
-maxTarget =
-    300
+newTarget : Int -> Cmd Msg
+newTarget maxTarget =
+    generate Target <| targetGenerator maxTarget
 
 
-newTarget : Cmd Msg
-newTarget =
-    generate Target targetGenerator
-
-
-targetGenerator : Generator Int
-targetGenerator =
+targetGenerator : Int -> Generator Int
+targetGenerator maxTarget =
     Random.map (divisibleBy 5) <| int barWeight maxTarget
 
 
 divisibleBy : Int -> Int -> Int
 divisibleBy x y =
-    y - (y % x)
+    y - (y % x) + x
 
 
 
