@@ -1,12 +1,13 @@
 module Main exposing (..)
 
 import Html exposing (Html, text, div, h1, h3, img, button, hr)
-import Html.Attributes exposing (src, style, value)
+import Html.Attributes exposing (src, style, value, class)
 import Html.Events exposing (onClick)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
 import Svg.Attributes exposing (width, height, viewBox, rx, ry, x, y)
 import List exposing (concat, head, tail)
+import Bootstrap.CDN as CDN
 
 
 ---- MODEL ----
@@ -183,14 +184,17 @@ toNumber weight =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "Plate Math" ]
+    div [ class "container text-center" ]
+        [ CDN.stylesheet
+        , h1 [] [ text "Plate Math" ]
         , barbellSvg model.svgPlates
-        , div []
-            [ div [] [ text <| "Target: " ++ toString model.target ++ " lbs" ]
-            , outcomeDiv model.outcome model.total
-            , button [ onClick Test ] [ text "Check" ]
-            , button [ onClick Reset ] [ text "Reset" ]
+        , div [ class "row" ]
+            [ div [class "col"]
+                [ text <| "Target: " ++ toString model.target ++ " lbs"
+                , outcomeDiv model.outcome model.total
+                ]
+            , div [class "col"] [button [ onClick Test, class "btn btn-primary" ] [ text "Check" ]
+            , button [ onClick Reset, class "btn btn-warning" ] [ text "Reset" ]]
             ]
         , plateRackDiv allPlates
         ]
@@ -220,14 +224,14 @@ plateRackDiv weights =
     div []
         [ hr [] []
         , h3 [] [ text "Click to add plates to bar" ]
-        , div [] <| List.map rackedPlateDiv weights
+        , div [ class "btn-group-lg", style [ ( "role", "group" ) ] ] <| List.map rackedPlateDiv weights
         ]
 
 
 rackedPlateDiv : PlateWeight -> Html Msg
 rackedPlateDiv weight =
     button
-        [ style []
+        [ class "btn btn-secondary"
         , onClick <| AddPlates weight
         ]
         [ text << toString <| toNumber weight ]
