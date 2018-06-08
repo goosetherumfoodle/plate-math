@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Html exposing (Html, text, div, h1, h3, button, hr, select, option, label)
 import Html.Attributes exposing (src, style, class, disabled, defaultValue, value, name, selected)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
 import Svg.Attributes exposing (width, height, viewBox, rx, ry, x, y)
@@ -86,7 +86,7 @@ type Msg
     | Target Int
     | Test
     | Undo
-    | MaxTarget Int
+    | MaxTarget String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -126,7 +126,17 @@ update msg model =
                     ( model, Cmd.none )
 
         MaxTarget newTarget ->
-            ( { model | maxTarget = newTarget }, Cmd.none )
+            ( { model | maxTarget = selectedOrDefaultTarget newTarget }, Cmd.none )
+
+
+selectedOrDefaultTarget : String -> Int
+selectedOrDefaultTarget selected =
+    case String.toInt selected of
+        Ok int ->
+            int
+
+        Err _ ->
+            weightWithTwo45s maxPlatePairs
 
 
 maxPlatePairs =
@@ -220,7 +230,13 @@ weightWithTwo45s numPlates =
 
 
 maxTargetSelect current =
-    select [ defaultValue "max" ] <| placeholderOption :: map maxTargetOption maxTargets
+    select
+        [ defaultValue "max"
+        , onInput MaxTarget
+        ]
+    <|
+        placeholderOption
+            :: map maxTargetOption maxTargets
 
 
 placeholderOption =
@@ -228,7 +244,7 @@ placeholderOption =
 
 
 maxTargetOption max =
-    option [ onClick (MaxTarget max) ] [ text <| toString max ]
+    option [] [ text <| toString max ]
 
 
 view : Model -> Html Msg
