@@ -125,8 +125,9 @@ update msg model =
                 Just _ ->
                     ( model, Cmd.none )
 
-        MaxTarget newTarget ->
-            ( { model | maxTarget = selectedOrDefaultTarget newTarget }, Cmd.none )
+        MaxTarget maxTargetInput ->
+            let newMaxTarget = selectedOrDefaultTarget maxTargetInput in
+            ( { model | maxTarget = newMaxTarget }, newTarget newMaxTarget  )
 
 
 selectedOrDefaultTarget : String -> Int
