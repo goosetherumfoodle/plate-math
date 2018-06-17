@@ -1,7 +1,33 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, h3, button, hr, select, option, label, a)
-import Html.Attributes exposing (src, style, class, disabled, defaultValue, value, name, selected, href)
+import Html
+    exposing
+        ( Html
+        , text
+        , div
+        , h1
+        , h3
+        , button
+        , hr
+        , select
+        , option
+        , label
+        , a
+        , img
+        )
+import Html.Attributes
+    exposing
+        ( src
+        , style
+        , class
+        , disabled
+        , defaultValue
+        , value
+        , name
+        , selected
+        , href
+        , alt
+        )
 import Html.Events exposing (onClick, onInput)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
@@ -261,6 +287,7 @@ view : Model -> Html Msg
 view model =
     div [ class "container text-center" ]
         [ CDN.stylesheet
+        , githubBadge
         , h1 [] [ text "Plate Math Quiz" ]
         , barbellSvg model.plates
         , div [ class "row" ]
@@ -288,7 +315,24 @@ view model =
                 ]
             ]
         , plateRackDiv model.outcome allPlates
-        , div [ class "card-footer text-muted" ] [ a [ href "https://github.com/goosetherumfoodle/plate-math" ] [ text "See the code" ] ]
+        ]
+
+
+githubBadge : Html Msg
+githubBadge =
+    a [ href "https://github.com/goosetherumfoodle/plate-math" ]
+        [ img
+            [ style
+                [ ( "position", "absolute" )
+                , ( "top", "0" )
+                , ( "left", "0" )
+                , ( "border", "0" )
+                , ( "margin-top", "0" )
+                ]
+            , src "https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png"
+            , alt "Fork me on GitHub!"
+            ]
+            []
         ]
 
 
