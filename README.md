@@ -1,5 +1,4 @@
-### Active Deployment
-App available at https://plate-math-quiz.firebaseapp.com
+https://goosetherumfoodle.github.io/plate-math/
 
 ## Available scripts
 In the project directory you can run:
