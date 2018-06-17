@@ -126,8 +126,11 @@ update msg model =
                     ( model, Cmd.none )
 
         MaxTarget maxTargetInput ->
-            let newMaxTarget = selectedOrDefaultTarget maxTargetInput in
-            ( { model | maxTarget = newMaxTarget }, newTarget newMaxTarget  )
+            let
+                newMaxTarget =
+                    selectedOrDefaultTarget maxTargetInput
+            in
+                ( { model | maxTarget = newMaxTarget }, newTarget newMaxTarget )
 
 
 selectedOrDefaultTarget : String -> Int
@@ -140,6 +143,7 @@ selectedOrDefaultTarget selected =
             weightWithTwo45s maxPlatePairs
 
 
+maxPlatePairs : number
 maxPlatePairs =
     6
 
@@ -222,15 +226,18 @@ toNumber weight =
 ---- VIEW ----
 
 
+maxTargets : List Int
 maxTargets =
     map weightWithTwo45s (range 1 maxPlatePairs)
 
 
+weightWithTwo45s : Int -> Int
 weightWithTwo45s numPlates =
     numPlates * round (toNumber FortyFive * 2) + barWeight
 
 
-maxTargetSelect current =
+maxTargetSelect : Html Msg
+maxTargetSelect =
     select
         [ defaultValue "max"
         , onInput MaxTarget
@@ -240,10 +247,12 @@ maxTargetSelect current =
             :: map maxTargetOption maxTargets
 
 
+placeholderOption : Html Msg
 placeholderOption =
     option [ disabled True, selected True ] [ text "Up To" ]
 
 
+maxTargetOption : Int -> Html Msg
 maxTargetOption max =
     option [] [ text <| toString max ]
 
@@ -275,14 +284,15 @@ view model =
                     , class "btn btn-danger"
                     ]
                     [ text "Reset" ]
-                , maxTargetSelect model.maxTarget
+                , maxTargetSelect
                 ]
             ]
         , plateRackDiv model.outcome allPlates
-        , div [class "card-footer text-muted"] [a [href "https://github.com/goosetherumfoodle/plate-math"] [text "See the code"]]
+        , div [ class "card-footer text-muted" ] [ a [ href "https://github.com/goosetherumfoodle/plate-math" ] [ text "See the code" ] ]
         ]
 
 
+disableableButton : Maybe a -> List (Html.Attribute Msg) -> Html Msg -> Html Msg
 disableableButton outcome style txt =
     case outcome of
         Nothing ->
