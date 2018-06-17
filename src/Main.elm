@@ -1,7 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, h3, button, hr, select, option, label)
-import Html.Attributes exposing (src, style, class, disabled, defaultValue, value, name, selected)
+import Html exposing (Html, text, div, h1, h3, button, hr, select, option, label, a)
+import Html.Attributes exposing (src, style, class, disabled, defaultValue, value, name, selected, href)
 import Html.Events exposing (onClick, onInput)
 import Random exposing (Generator, generate, int)
 import Svg exposing (Svg, svg, rect)
@@ -57,7 +57,7 @@ barWeight =
 
 
 type PlateWeight
-    = FourtyFive
+    = FortyFive
     | ThirtyFive
     | TwentyFive
     | Ten
@@ -67,7 +67,7 @@ type PlateWeight
 
 allPlates : List PlateWeight
 allPlates =
-    [ FourtyFive
+    [ FortyFive
     , ThirtyFive
     , TwentyFive
     , Ten
@@ -199,7 +199,7 @@ sumTotal model =
 toNumber : PlateWeight -> Float
 toNumber weight =
     case weight of
-        FourtyFive ->
+        FortyFive ->
             45
 
         ThirtyFive ->
@@ -227,7 +227,7 @@ maxTargets =
 
 
 weightWithTwo45s numPlates =
-    numPlates * round (toNumber FourtyFive * 2) + barWeight
+    numPlates * round (toNumber FortyFive * 2) + barWeight
 
 
 maxTargetSelect current =
@@ -279,6 +279,7 @@ view model =
                 ]
             ]
         , plateRackDiv model.outcome allPlates
+        , div [class "card-footer text-muted"] [a [href "https://github.com/goosetherumfoodle/plate-math"] [text "See the code"]]
         ]
 
 
@@ -458,7 +459,7 @@ buildRightPlate prevPlate weight =
 calcHeight : PlateWeight -> Float
 calcHeight weight =
     case weight of
-        FourtyFive ->
+        FortyFive ->
             120
 
         ThirtyFive ->
@@ -480,7 +481,7 @@ calcHeight weight =
 calcY : PlateWeight -> Float
 calcY weight =
     case weight of
-        FourtyFive ->
+        FortyFive ->
             0
 
         ThirtyFive ->
@@ -502,7 +503,7 @@ calcY weight =
 calcWidth : PlateWeight -> Float
 calcWidth weight =
     case weight of
-        FourtyFive ->
+        FortyFive ->
             10
 
         ThirtyFive ->
