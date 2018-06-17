@@ -1,12 +1,12 @@
-https://goosetherumfoodle.github.io/plate-math/
+Live: https://goosetherumfoodle.github.io/plate-math/
 
-## Available scripts
-In the project directory you can run:
-### `elm-app build`
-Builds the app for production to the `build` folder.
+## Installing dependencies
 
-The build is minified, and the filenames include the hashes.
-Your app is ready to be deployed!
+### `elm-app install`
+
+An alias for [`elm-app package install`](#package)
+
+## Running locally
 
 ### `elm-app start`
 Runs the app in the development mode.
@@ -15,6 +15,13 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.
 You will also see any lint errors in the console.
 
-### `elm-app install`
+## Deploying to GitHub Pages
+1 Build the project with:
+### `elm-app build`
+Builds the app for production to the `build` folder.
 
-An alias for [`elm-app package install`](#package)
+The build is minified, and the filenames include the hashes.
+Your app is ready to be deployed!
+
+2 make sure you have [gh-pages](https://www.npmjs.com/package/gh-pages) installed
+### `gh-pages -d build`
