@@ -281,7 +281,9 @@ barbell plates =
 
 githubBadge : Html Msg
 githubBadge =
-    a [ href "https://github.com/goosetherumfoodle/plate-math" ]
+    a [ href "https://github.com/goosetherumfoodle/plate-math"
+      , class "d-none  d-sm-block"
+      ]
         [ img
             [ style
                 [ ( "position", "absolute" )
