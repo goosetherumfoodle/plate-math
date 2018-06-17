@@ -189,39 +189,23 @@ toNumber weight =
             2.5
 
 
+newTarget : Int -> Cmd Msg
+newTarget maxTarget =
+    generate Target <| targetGenerator maxTarget
+
+
+targetGenerator : Int -> Generator Int
+targetGenerator maxTarget =
+    Random.map (divisibleBy 5) <| int barWeight maxTarget
+
+
+divisibleBy : Int -> Int -> Int
+divisibleBy x y =
+    y - (y % x) + x
+
+
 
 ---- VIEW ----
-
-
-maxTargets : List Int
-maxTargets =
-    map weightWithTwo45s (range 1 maxPlatePairs)
-
-
-weightWithTwo45s : Int -> Int
-weightWithTwo45s numPlates =
-    numPlates * round (toNumber FortyFive * 2) + barWeight
-
-
-maxTargetSelect : Html Msg
-maxTargetSelect =
-    select
-        [ defaultValue "max"
-        , onInput MaxTarget
-        ]
-    <|
-        placeholderOption
-            :: map maxTargetOption maxTargets
-
-
-placeholderOption : Html Msg
-placeholderOption =
-    option [ disabled True, selected True ] [ text "Up To" ]
-
-
-maxTargetOption : Int -> Html Msg
-maxTargetOption max =
-    option [] [ text <| toString max ]
 
 
 view : Model -> Html Msg
@@ -259,6 +243,38 @@ view model =
         ]
 
 
+maxTargets : List Int
+maxTargets =
+    map weightWithTwo45s (range 1 maxPlatePairs)
+
+
+weightWithTwo45s : Int -> Int
+weightWithTwo45s numPlates =
+    numPlates * round (toNumber FortyFive * 2) + barWeight
+
+
+maxTargetSelect : Html Msg
+maxTargetSelect =
+    select
+        [ defaultValue "max"
+        , onInput MaxTarget
+        ]
+    <|
+        placeholderOption
+            :: map maxTargetOption maxTargets
+
+
+placeholderOption : Html Msg
+placeholderOption =
+    option [ disabled True, selected True ] [ text "Up To" ]
+
+
+maxTargetOption : Int -> Html Msg
+maxTargetOption max =
+    option [] [ text <| toString max ]
+
+
+barbell : List PlatePair -> Html Msg
 barbell plates =
     div [] [ barbellSvg plates ]
 
@@ -331,22 +347,3 @@ rackedPlateDiv outcome weight =
         , onClick <| AddPlates weight
         ]
         (text << toString <| toNumber weight)
-
-
-
----- Domain ------
-
-
-newTarget : Int -> Cmd Msg
-newTarget maxTarget =
-    generate Target <| targetGenerator maxTarget
-
-
-targetGenerator : Int -> Generator Int
-targetGenerator maxTarget =
-    Random.map (divisibleBy 5) <| int barWeight maxTarget
-
-
-divisibleBy : Int -> Int -> Int
-divisibleBy x y =
-    y - (y % x) + x
