@@ -216,7 +216,10 @@ view model =
         , h1 [] [ text "Plate Math Quiz" ]
         , barbell model.plates
         , div [ class "row" ]
-            [ div [ class "col" ]
+            [ div
+                [ class "col"
+                , style [ ( "font-size", "1.5rem" ) ]
+                ]
                 [ text <| "Target: " ++ toString model.target ++ " lbs"
                 , outcomeDiv model.outcome model.total
                 ]
