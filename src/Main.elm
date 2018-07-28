@@ -65,7 +65,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { total = barWeight
       , target = 0
-      , outcome = Nothing
+      , outcome = Incomplete
       , plates = []
       , maxTarget = weightWithTwo45s maxPlatePairs
       }
@@ -100,7 +100,7 @@ update msg model =
         Reset ->
             ( { model
                 | total = 0
-                , outcome = Nothing
+                , outcome = Incomplete
                 , plates = []
               }
             , newTarget model.maxTarget
@@ -115,16 +115,16 @@ update msg model =
                     sumTotal model
             in
                 if newModel.total == newModel.target then
-                    ( { newModel | outcome = Just True }, Cmd.none )
+                    ( { newModel | outcome = Correct }, Cmd.none )
                 else
-                    ( { newModel | outcome = Just False }, Cmd.none )
+                    ( { newModel | outcome = Incorrect }, Cmd.none )
 
         Undo ->
             case model.outcome of
-                Nothing ->
+                Incomplete ->
                     ( { model | plates = drop 1 model.plates }, Cmd.none )
 
-                Just _ ->
+                _ ->
                     ( model, Cmd.none )
 
         MaxTarget maxTargetInput ->
@@ -148,10 +148,10 @@ selectedOrDefaultTarget selected =
 addPlates : PlateWeight -> Model -> Model
 addPlates weight model =
     case model.outcome of
-        Nothing ->
+        Incomplete ->
             addSvgPlates maxPlatePairs weight model
 
-        Just _ ->
+        _ ->
             model
 
 
@@ -223,27 +223,47 @@ view model =
                 [ text <| "Target: " ++ toString model.target ++ " lbs"
                 , outcomeDiv model.outcome model.total
                 ]
-            , div [ class "col" ]
-                [ disableableButton model.outcome
-                    [ onClick Test
-                    , class "btn btn-primary"
-                    ]
-                    (text "Check")
-                , disableableButton model.outcome
-                    [ onClick Undo
-                    , class "btn btn-warning"
-                    ]
-                    (text "Undo")
-                , button
-                    [ onClick Reset
-                    , class "btn btn-danger"
-                    ]
-                    [ text "Reset" ]
-                , maxTargetSelect
-                ]
+            , commandButtons model.outcome
             ]
         , plateRackDiv model.outcome allPlates
         ]
+
+
+commandButtons : Outcome -> Html Msg
+commandButtons outcome =
+    div [ class "col" ]
+        [ checkButton outcome
+        , undoButton outcome
+        , resetButton
+        , maxTargetSelect
+        ]
+
+
+resetButton : Html Msg
+resetButton =
+    button
+        [ onClick Reset
+        , class "btn btn-danger"
+        ]
+        [ text "Reset" ]
+
+
+undoButton : Outcome -> Html Msg
+undoButton outcome =
+    disableableButton outcome
+        [ onClick Undo
+        , class "btn btn-warning"
+        ]
+        (text "Undo")
+
+
+checkButton : Outcome -> Html Msg
+checkButton outcome =
+    disableableButton outcome
+        [ onClick Test
+        , class "btn btn-primary"
+        ]
+        (text "Check")
 
 
 maxTargets : List Int
@@ -284,9 +304,10 @@ barbell plates =
 
 githubBadge : Html Msg
 githubBadge =
-    a [ href "https://github.com/goosetherumfoodle/plate-math"
-      , class "d-none  d-sm-block"
-      ]
+    a
+        [ href "https://github.com/goosetherumfoodle/plate-math"
+        , class "d-none  d-sm-block"
+        ]
         [ img
             [ style
                 [ ( "position", "absolute" )
@@ -302,36 +323,36 @@ githubBadge =
         ]
 
 
-disableableButton : Maybe a -> List (Html.Attribute Msg) -> Html Msg -> Html Msg
+disableableButton : Outcome -> List (Html.Attribute Msg) -> Html Msg -> Html Msg
 disableableButton outcome style txt =
     case outcome of
-        Nothing ->
+        Incomplete ->
             button style [ txt ]
 
-        Just _ ->
+        _ ->
             button (disabled True :: style) [ txt ]
 
 
-outcomeDiv : Maybe Bool -> Int -> Html Msg
+outcomeDiv : Outcome -> Int -> Html Msg
 outcomeDiv outcome total =
     let
         displayTotal =
             text <| "Total: " ++ toString total
     in
         case outcome of
-            Nothing ->
+            Incomplete ->
                 div [] [ text "" ]
 
-            Just True ->
+            Correct ->
                 div [ style [ ( "color", "green" ) ] ]
                     [ displayTotal ]
 
-            Just False ->
+            Incorrect ->
                 div [ style [ ( "color", "red" ) ] ]
                     [ displayTotal ]
 
 
-plateRackDiv : Maybe a -> List PlateWeight -> Html Msg
+plateRackDiv : Outcome -> List PlateWeight -> Html Msg
 plateRackDiv outcome weights =
     div []
         [ hr [] []
@@ -345,7 +366,7 @@ plateRackDiv outcome weights =
         ]
 
 
-rackedPlateDiv : Maybe a -> PlateWeight -> Html Msg
+rackedPlateDiv : Outcome -> PlateWeight -> Html Msg
 rackedPlateDiv outcome weight =
     disableableButton outcome
         [ class "btn btn-secondary"

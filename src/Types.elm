@@ -4,10 +4,12 @@ module Types exposing (..)
 type alias Model =
     { target : Int
     , total : Int
-    , outcome : Maybe Bool
+    , outcome : Outcome
     , plates : List PlatePair
     , maxTarget : Int
     }
+
+type Outcome = Correct | Incorrect | Incomplete
 
 
 type Msg
